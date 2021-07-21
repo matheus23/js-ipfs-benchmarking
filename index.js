@@ -57,12 +57,13 @@ async function createInMemoryIPFS() {
 async function runBenchmark() {
     const ipfs = await createInMemoryIPFS()
    
-    const amount = 1000
+    const amount = 3000
 
-    console.log("add #,time in ms")
+    console.log("add #\ttime in ms")
 
     for (let i = 0; i < amount; i++) {
-        console.log(`${i},${await addAndMeasureRandom(ipfs, true)}`)
+        const ms = await addAndMeasureRandom(ipfs, true)
+        console.log(`${i}\t${ms.toFixed(2).replace(".", ",")}`) // sorry, I'm german and this is what google sheets requires for me :(
     }
 
     await ipfs.stop()

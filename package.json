@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "name": "js-ipfs-benchmarking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "interface-datastore": "4.0.0",
+    "ipfs-core": "^0.8.0",
+    "ipfs-repo": "9.1.6"
+  }
+}

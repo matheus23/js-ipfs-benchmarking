@@ -85,15 +85,18 @@ async function addAndMeasureRandom(ipfs, shouldPin) {
 }
 
 async function run() {
-    const ipfs = await createInMemoryIPFS()
-    console.log(await ipfs.version())
+    const ipfs1 = await createInMemoryIPFS()
+    console.log(await ipfs1.version())
     const withPinningHandle = await fs.open("data-with-pinning.csv", "w")
-    const withoutPinningHandle = await fs.open("data-without-pinning.csv", "w")
-    await runBenchmark(ipfs, true, withPinningHandle)
-    await runBenchmark(ipfs, false, withoutPinningHandle)
-    await withoutPinningHandle.close()
+    await runBenchmark(ipfs1, true, withPinningHandle)
+    await ipfs1.stop()
     await withPinningHandle.close()
-    await ipfs.stop()
+    
+    const ipfs2 = await createInMemoryIPFS()
+    const withoutPinningHandle = await fs.open("data-without-pinning.csv", "w")
+    await runBenchmark(ipfs2, false, withoutPinningHandle)
+    await withoutPinningHandle.close()
+    await ipfs2.stop()
 }
 
 run()

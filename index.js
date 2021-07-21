@@ -3,11 +3,15 @@ import Repo from "ipfs-repo"
 import { MemoryDatastore } from "interface-datastore"
 import crypto from "crypto"
 import { performance } from "perf_hooks"
+import { promises as fs } from "fs"
 
 async function createRegularIPFS() {
     return await Ipfs.create({
         offline: true,
         silent: true,
+        preload: {
+            enabled: false,
+        },
         config: {
             Addresses: {
                 Swarm: []
@@ -20,6 +24,9 @@ async function createInMemoryIPFS() {
   return await Ipfs.create({
     offline: true,
     silent: true,
+    preload: {
+        enabled: false,
+    },
     config: {
       Addresses: {
         Swarm: []
@@ -54,19 +61,19 @@ async function createInMemoryIPFS() {
   })
 }
 
-async function runBenchmark() {
-    const ipfs = await createInMemoryIPFS()
-   
+async function runBenchmark(ipfs, shouldPin, handle) {
     const amount = 3000
 
-    console.log("add #\ttime in ms")
+    await handle.appendFile(`number of adds ${shouldPin ? "with" : "without"} pinning\ttime for next add in ms\n`, { encoding: "utf-8" })
 
     for (let i = 0; i < amount; i++) {
-        const ms = await addAndMeasureRandom(ipfs, true)
-        console.log(`${i}\t${ms.toFixed(2).replace(".", ",")}`) // sorry, I'm german and this is what google sheets requires for me :(
+        console.log(`${i}/${amount}`)
+        const ms = await addAndMeasureRandom(ipfs, shouldPin)
+        await handle.appendFile(
+            `${i}\t${ms.toFixed(2).replace(".", ",")}\n`, // sorry, I'm german and this is what google sheets requires for me :(
+            { encoding: "utf-8" }
+        )
     }
-
-    await ipfs.stop()
 }
 
 async function addAndMeasureRandom(ipfs, shouldPin) {
@@ -77,5 +84,16 @@ async function addAndMeasureRandom(ipfs, shouldPin) {
     return performance.now() - before
 }
 
+async function run() {
+    const ipfs = await createInMemoryIPFS()
+    console.log(await ipfs.version())
+    const withPinningHandle = await fs.open("data-with-pinning.csv", "w")
+    const withoutPinningHandle = await fs.open("data-without-pinning.csv", "w")
+    await runBenchmark(ipfs, true, withPinningHandle)
+    await runBenchmark(ipfs, false, withoutPinningHandle)
+    await withoutPinningHandle.close()
+    await withPinningHandle.close()
+    await ipfs.stop()
+}
 
-runBenchmark()
+run()
